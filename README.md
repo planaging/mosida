@@ -16,7 +16,7 @@
 
 ## APK
 
-- 위치: [`apk/플랜에이징_모시다_release.apk`](apk/) (release, 서명됨)
+- 위치: [`apk/모시다_release.apk`](apk/) (release, 서명됨)
 - 패키지: `ai.planaging.mosida`
 
 ## 센터 사무실 화면 (등하원표 자동 생성)
@@ -64,7 +64,7 @@
 1. Pleos Connect 에뮬레이터를 켭니다.
 2. APK를 설치합니다. Pleos 차량·음성·내비 권한은 설치할 때 함께 부여됩니다.
    ```
-   adb install -r -g "apk/플랜에이징_모시다_release.apk"
+   adb install -r -g "apk/모시다_release.apk"
    ```
 3. **(권장) 내비 화면 위로 앱이 돌아오도록 허용합니다.** 경로가 바뀔 때마다 Pleos 내비가 지도를 앞으로 띄우는데, 이 허용이 있으면 2~3초 뒤와 뒷문이 열릴 때 모시다가 다시 앞으로 옵니다. 허용이 없으면 하단 런처의 모시다 아이콘을 직접 누르면 됩니다.
    ```
