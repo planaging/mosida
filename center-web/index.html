@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모시다 등하원표</title>
+<style>
+  :root { --bg:#0b1426; --panel:#14213d; --panel2:#1c2b4a; --line:#2a3b5e; --text:#fff; --muted:#a9b6cc; --blue:#2563eb; --green:#2bc48a; --greenbg:#0f2e26; --orange:#ff7a3d; --orangebg:#3a2210; --red:#ffc9c9; --redbg:#4a1414; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 system-ui,"Malgun Gothic",sans-serif; }
+  header { display:flex; align-items:center; gap:14px; padding:16px 24px; flex-wrap:wrap; }
+  header img { width:44px; height:44px; border-radius:10px; }
+  h1 { font-size:24px; margin:0; }
+  h2 { font-size:18px; margin:0 0 10px; }
+  .sub { color:var(--muted); font-size:14px; }
+  main { display:grid; grid-template-columns:minmax(300px,380px) 1fr; gap:16px; padding:0 24px 24px; align-items:start; }
+  @media (max-width:860px) { main { grid-template-columns:1fr; padding:0 16px 16px; } header { padding:16px; } }
+  .card { background:var(--panel); border-radius:16px; padding:16px; margin-bottom:16px; }
+  button, select { font:inherit; color:var(--text); background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:8px 12px; cursor:pointer; }
+  button:focus-visible, select:focus-visible { outline:2px solid #8db4ff; outline-offset:2px; }
+  button.primary { background:var(--blue); border-color:var(--blue); font-weight:700; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .seg button[aria-pressed=true] { background:var(--blue); border-color:var(--blue); font-weight:700; }
+  .chips { display:grid; grid-template-columns:repeat(auto-fill,minmax(66px,1fr)); gap:6px; }
+  .chip { padding:8px 4px; text-align:center; font-weight:700; font-size:15px; }
+  .chip small { display:block; font-weight:400; font-size:11px; color:var(--muted); }
+  .chip.on { background:var(--greenbg); border-color:var(--green); }
+  .chip.direct { background:var(--orangebg); border-color:var(--orange); }
+  .chip.off { opacity:.55; }
+  .legend { margin:8px 0 0; font-size:13px; color:var(--muted); }
+  .warn { background:var(--redbg); color:var(--red); border-radius:10px; padding:10px 12px; margin-bottom:12px; font-weight:700; }
+  .check { background:var(--panel2); border-radius:10px; padding:10px 12px; margin-bottom:16px; color:var(--muted); font-size:14px; }
+  .check b { color:var(--text); }
+  .vehicles { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:16px; }
+  .veh { margin:0; }
+  .veh.over { outline:2px dashed #8db4ff; }
+  .veh h3 { margin:0; font-size:20px; }
+  .staff { color:var(--muted); font-size:14px; margin:2px 0 10px; }
+  .roundhead { display:flex; justify-content:space-between; font-weight:700; color:#8db4ff; font-size:14px; margin:10px 0 6px; }
+  .stop { display:grid; grid-template-columns:26px 1fr; gap:6px 8px; align-items:center; background:var(--panel2); border-radius:10px; padding:8px 10px; margin-bottom:6px; cursor:grab; }
+  .stop .tools { grid-column:2; }
+  .num { width:26px; height:26px; border-radius:50%; background:var(--orange); display:grid; place-items:center; font-weight:800; font-size:14px; }
+  .who { font-weight:800; }
+  .who span { font-weight:400; color:var(--muted); font-size:14px; margin-left:6px; white-space:nowrap; }
+  .why { font-size:13px; color:var(--muted); }
+  .tools { display:flex; gap:4px; align-items:center; }
+  .tools button { padding:4px 8px; }
+  .tools select { padding:4px; font-size:13px; }
+  .boarding { font-size:13px; color:var(--muted); margin-top:4px; }
+  .empty { color:var(--muted); padding:24px; text-align:center; }
+  .note { font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <img src="../docs/brand/mosida-logo.svg" alt="">
+  <div>
+    <h1>모시다 등하원표</h1>
+    <div class="sub">센터 사무실 화면 · 가상 시연 데이터 · 입력 내용은 이 PC 밖으로 나가지 않아요</div>
+  </div>
+</header>
+<main>
+  <section>
+    <div class="card">
+      <h2>1. 날짜와 운행</h2>
+      <div class="row">
+        <select id="date" aria-label="날짜"></select>
+        <div class="row seg" role="group" aria-label="운행 종류">
+          <button id="kind-dropoff" data-kind="dropoff">하원</button>
+          <button id="kind-pickup" data-kind="pickup">등원</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>2. 오늘 어르신 <span class="sub" id="elder-count"></span></h2>
+      <div class="chips" id="elders"></div>
+      <p class="legend">누를 때마다 바뀌어요: 차량 → 보호자 직접 → 결석</p>
+    </div>
+    <div class="card">
+      <h2>3. 오늘 근무자</h2>
+      <div class="chips" id="staff"></div>
+      <p class="legend">직원마다 운전할 수 있는 차가 달라요. 작은 글씨가 운전 가능한 차예요.</p>
+    </div>
+    <button class="primary" id="make" style="width:100%;padding:14px">등하원표 만들기</button>
+  </section>
+  <section>
+    <div id="warnings"></div>
+    <div id="check"></div>
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <h2 style="margin:0" id="plan-title">등하원표</h2>
+      <div class="row">
+        <button id="csv">표 저장 (엑셀용)</button>
+        <button id="json">차로 보낼 파일 저장</button>
+      </div>
+    </div>
+    <div class="vehicles" id="vehicles"></div>
+    <div class="card" id="direct-card" style="margin-top:16px" hidden><b>보호자가 직접 모셔요:</b> <span id="direct"></span></div>
+    <p class="note" id="basis"></p>
+  </section>
+</main>
+<script src="data.js"></script>
+<script src="planner.js"></script>
+<script>
+  const P = MosidaPlanner;
+  const rows = P.parseCsv(MOSIDA_SAMPLE_CSV);
+  const dates = [...new Set(rows.map((r) => r.date))];
+  const allElders = [...new Set(rows.map((r) => r.elder))].sort();
+  const $ = (id) => document.getElementById(id);
+  const state = { date: dates[dates.length - 1], kind: 'dropoff', elder: {}, staff: new Set(), plan: null };
+  const KIND = { dropoff: '하원', pickup: '등원' };
+
+  function loadDay() {
+    const d = P.dayInput(rows, state.date, state.kind);
+    state.elder = {};
+    allElders.forEach((id) => { state.elder[id] = 'off'; });
+    d.present.forEach((id) => { state.elder[id] = 'on'; });
+    d.direct.forEach((id) => { state.elder[id] = 'direct'; });
+    state.staff = new Set(d.staff);
+    drawInputs();
+    make();
+  }
+
+  function drawInputs() {
+    document.querySelectorAll('[data-kind]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kind === state.kind)));
+    const label = { on: '차량', direct: '보호자', off: '결석' };
+    $('elders').replaceChildren(...allElders.map((id) => {
+      const b = document.createElement('button');
+      b.className = 'chip ' + state.elder[id];
+      b.innerHTML = `${id}<small>${label[state.elder[id]]}</small>`;
+      b.onclick = () => {
+        state.elder[id] = { on: 'direct', direct: 'off', off: 'on' }[state.elder[id]];
+        drawInputs();
+      };
+      return b;
+    }));
+    const n = Object.values(state.elder);
+    $('elder-count').textContent = `차량 ${n.filter((v) => v === 'on').length} · 보호자 ${n.filter((v) => v === 'direct').length}`;
+    $('staff').replaceChildren(...Object.keys(P.STAFF).map((s) => {
+      const b = document.createElement('button');
+      const on = state.staff.has(s);
+      b.className = 'chip ' + (on ? 'on' : 'off');
+      b.setAttribute('aria-pressed', String(on));
+      b.innerHTML = `${s}<small>${P.STAFF[s].join('·') || '동승'}</small>`;
+      b.onclick = () => { on ? state.staff.delete(s) : state.staff.add(s); drawInputs(); };
+      return b;
+    }));
+  }
+
+  function make() {
+    const ids = Object.keys(state.elder);
+    state.plan = P.makePlan({
+      rows, date: state.date, kind: state.kind,
+      present: ids.filter((id) => state.elder[id] !== 'off'),
+      direct: ids.filter((id) => state.elder[id] === 'direct'),
+      staff: [...state.staff].sort(),
+    });
+    state.autoCheck = P.compare(state.plan, rows);
+    drawPlan();
+  }
+
+  function moveTo(id, code) {
+    const from = state.plan.vehicles.find((v) => v.riders.some((r) => r.elder === id));
+    const to = state.plan.vehicles.find((v) => v.code === code);
+    if (!from || !to || from === to) return;
+    const rider = from.riders.find((r) => r.elder === id);
+    from.riders = from.riders.filter((r) => r !== rider);
+    to.riders.push({ ...rider, reason: '직원이 직접 옮김' });
+    state.plan = P.arrange(state.plan);
+    drawPlan();
+  }
+
+  function shift(code, id, by) {
+    const v = state.plan.vehicles.find((x) => x.code === code);
+    const i = v.riders.findIndex((r) => r.elder === id);
+    const j = i + by;
+    if (j < 0 || j >= v.riders.length) return;
+    [v.riders[i], v.riders[j]] = [v.riders[j], v.riders[i]];
+    v.riders[i] = { ...v.riders[i], reason: '직원이 순서를 바꿈' };
+    v.riders[j] = { ...v.riders[j], reason: '직원이 순서를 바꿈' };
+    state.plan = P.arrange(state.plan);
+    drawPlan();
+  }
+
+  function drawPlan() {
+    const p = state.plan;
+    $('plan-title').textContent = `${p.date} ${KIND[p.kind]}표`;
+    $('warnings').replaceChildren(...p.warnings.map((w) => Object.assign(document.createElement('div'), { className: 'warn', textContent: w })));
+    const c = state.autoCheck;
+    $('check').innerHTML = c.total
+      ? `<div class="check">이 날 시연 기록과 비교: <b>차량 ${c.same} / ${c.total}명 일치</b>${c.pairs ? ` · 내리는 순서 ${c.agree} / ${c.pairs}쌍 일치` : ''} <span>(처음 자동으로 짠 표 기준)</span></div>` : '';
+    const verb = p.kind === 'dropoff' ? '내리는' : '타는';
+    $('vehicles').replaceChildren(...p.vehicles.map((v) => {
+      const el = document.createElement('article');
+      el.className = 'card veh';
+      el.ondragover = (e) => { e.preventDefault(); el.classList.add('over'); };
+      el.ondragleave = () => el.classList.remove('over');
+      el.ondrop = (e) => { e.preventDefault(); el.classList.remove('over'); moveTo(e.dataTransfer.getData('text/plain'), v.code); };
+      const head = document.createElement('div');
+      head.innerHTML = `<h3>${v.code} ${v.name} <span class="sub">${v.riders.length}명 / 한 번에 ${v.capacity}명</span></h3>
+        <div class="staff">운전 ${v.driver}${v.escort ? ` · 동승 ${v.escort}` : ' · 동승 없음'}</div>`;
+      el.append(head);
+      v.rounds.forEach((r) => {
+        const rh = document.createElement('div');
+        rh.className = 'roundhead';
+        rh.innerHTML = `<span>${r.round}차 · ${p.kind === "pickup" ? "센터 도착 " + r.departAt + " 목표" : r.departAt + " 출발 예정"}</span><span>${verb} 순서</span>`;
+        el.append(rh);
+        r.stops.forEach((s) => {
+          const row = document.createElement('div');
+          row.className = 'stop';
+          row.draggable = true;
+          row.ondragstart = (e) => e.dataTransfer.setData('text/plain', s.elder);
+          const others = p.vehicles.filter((x) => x.code !== v.code);
+          row.innerHTML = `<div class="num">${s.order}</div>
+            <div><div class="who">${s.elder}<span>${s.seat}${s.at ? " · " + s.at + " 탑승 예정" : ""}</span></div><div class="why">${s.reason}</div></div>
+            <div class="tools">
+              <button aria-label="${s.elder} 앞으로" data-a="up">▲</button>
+              <button aria-label="${s.elder} 뒤로" data-a="down">▼</button>
+              ${others.length ? `<select aria-label="${s.elder} 다른 차로 옮기기"><option value="">차 변경</option>${others.map((x) => `<option value="${x.code}">${x.code} ${x.name}</option>`).join('')}</select>` : ''}
+            </div>`;
+          row.querySelector('[data-a=up]').onclick = () => shift(v.code, s.elder, -1);
+          row.querySelector('[data-a=down]').onclick = () => shift(v.code, s.elder, 1);
+          const sel = row.querySelector('select');
+          if (sel) sel.onchange = () => moveTo(s.elder, sel.value);
+          el.append(row);
+        });
+        if (p.kind === 'dropoff' && r.stops.length > 1) {
+          const b = document.createElement('div');
+          b.className = 'boarding';
+          b.textContent = '타는 순서(내리는 순서의 반대): ' + [...r.stops].reverse().map((s) => s.elder).join(' → ');
+          el.append(b);
+        }
+      });
+      return el;
+    }));
+    if (!p.vehicles.length) $('vehicles').innerHTML = '<div class="empty">태울 어르신이나 운전할 근무자를 확인해 주세요.</div>';
+    $('direct-card').hidden = !p.direct.length;
+    $('direct').textContent = p.direct.join(', ');
+    $('basis').textContent = '이 표는 지난 기록의 차량과 순서를 참고한 초안이에요. 시각은 예정일 뿐 기록이 아니에요. 기록에는 실제 시각만 남아요. 어르신 조건(발판·동승 필요)은 조건표가 들어오면 반영돼요.';
+  }
+
+  function save(name, text, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type }));
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  $('csv').onclick = () => {
+    const p = state.plan;
+    const out = [['날짜', '운행', '차량', '운전', '동승', '회차', '출발·도착 예정', '순서', '어르신', '자리', '탑승 예정', '배정 이유']];
+    p.vehicles.forEach((v) => v.rounds.forEach((r) => r.stops.forEach((s) => out.push([p.date, KIND[p.kind], `${v.code} ${v.name}`, v.driver, v.escort || '', r.round, r.departAt, s.order, s.elder, s.seat, s.at || '', s.reason]))));
+    p.direct.forEach((id) => out.push([p.date, KIND[p.kind], '45 보호자 직접', '', '', '', '', '', id, '', '', '']));
+    save(`등하원표_${p.date}_${KIND[p.kind]}.csv`, '﻿' + out.map((l) => l.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv');
+  };
+  $('json').onclick = () => {
+    save('mosida-trip.json', P.toTripFile(state.plan), 'application/json');
+  };
+  $('make').onclick = make;
+  document.querySelectorAll('[data-kind]').forEach((b) => { b.onclick = () => { state.kind = b.dataset.kind; loadDay(); }; });
+  $('date').replaceChildren(...dates.map((d) => Object.assign(document.createElement('option'), { value: d, textContent: `${d} (토)`, selected: d === state.date })));
+  $('date').onchange = (e) => { state.date = e.target.value; loadDay(); };
+  loadDay();
+</script>
+</body>
+</html>

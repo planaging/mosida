@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 차량용(Automotive) 앱 -->
+    <uses-feature android:name="android.hardware.type.automotive" android:required="true" />
+
+    <!-- Pleos Vehicle SDK: 읽기 전용 신호만 쓴다 (문·좌석/벨트·기어/주행거리·차량 정보) -->
+    <uses-permission android:name="pleos.car.permission.CAR_DOORS" />
+    <uses-permission android:name="pleos.car.permission.CAR_SEATS" />
+    <uses-permission android:name="pleos.car.permission.CAR_DRIVE" />
+    <uses-permission android:name="pleos.car.permission.CAR_INFO" />
+    <!-- Pleos 음성 안내 (TextToSpeech SDK) -->
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
+    <!-- Pleos 내비 (NaviHelper SDK): 경로 요청·안내 수신 -->
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
+    <uses-permission android:name="pleos.car.permission.NAVI_NOTIFY" />
+    <!-- 내비가 지도를 앞으로 띄운 뒤 모시다를 다시 앞으로 올리기 위해 (Android 백그라운드 실행 제한 예외) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- 음성 안내(TTS) 엔진 찾기: Android 11+ 패키지 가시성 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:label="모시다"
+        android:icon="@drawable/mosida_logo"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <meta-data android:name="distractionOptimized" android:value="true" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 개발용: 차량 신호 점검 화면. 앱 목록에는 안 보이고 adb로 연다. -->
+        <activity
+            android:name=".probe.SignalProbeActivity"
+            android:exported="true"
+            android:label="모시다 신호 점검">
+            <meta-data android:name="distractionOptimized" android:value="true" />
+        </activity>
+    </application>
+</manifest>
