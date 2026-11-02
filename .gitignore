@@ -1,0 +1,44 @@
+# Android / Gradle
+.gradle/
+build/
+*/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+# 공모전 제출용 release APK만 예외 (apk/팀명_앱이름_release.apk)
+!apk/
+!apk/*_release.apk
+
+# Android Studio
+.idea/
+*.iml
+.navigation/
+
+# 로컬 설정·키 (절대 커밋 금지)
+local.properties
+*.jks
+*.keystore
+.env
+.env.*
+secrets.properties
+
+# 실명 대조표·점검 파일 (센터 보관용, 절대 커밋 금지)
+*센터보관*
+*실명*
+*대조표*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin 2.x 컴파일러 캐시
+.kotlin/
+keystore.properties
+
+# ���� ����ҿ� �ø��� �ʴ� ���� ���� (���ÿ��� �д�)
+CLAUDE.md
+AGENTS.md
+docs/CONTEXT.md
+docs/SUBMISSION.md

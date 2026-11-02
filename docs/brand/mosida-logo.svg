@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="모시다">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2d33"/>
+      <stop offset="1" stop-color="#0b0c10"/>
+    </linearGradient>
+    <!-- 크롬(금속) 느낌: 위는 밝게, 가운데 어두운 띠, 아래로 갈수록 어둡게 -->
+    <linearGradient id="chrome" gradientUnits="userSpaceOnUse" x1="0" y1="398" x2="0" y2="625">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.42" stop-color="#d4d7dc"/>
+      <stop offset="0.5" stop-color="#8d9199"/>
+      <stop offset="0.58" stop-color="#d9dce1"/>
+      <stop offset="1" stop-color="#5c6068"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#chrome)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round">
+    <!-- ㅁ -->
+    <rect x="178" y="421" width="181" height="181" rx="22"/>
+    <!-- ㅅ -->
+    <path d="M433 602 L520 421 L605 602"/>
+    <!-- ㄷ -->
+    <path d="M846 421 H689 V602 H846"/>
+  </g>
+</svg>
