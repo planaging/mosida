@@ -17,6 +17,13 @@ class FakeVehicleGateway : VehicleGateway {
 
     override val rearRightDoorOpen: StateFlow<Boolean> = _door
     override val isMoving: StateFlow<Boolean> = _moving
+    private val _gearKnown = MutableStateFlow(true)
+    override val gearKnown: StateFlow<Boolean> = _gearKnown
+
+    /** 시연: 기어 값을 못 받는 상황을 흉내 낸다 */
+    fun setGearKnown(known: Boolean) {
+        _gearKnown.value = known
+    }
     override val seatOccupied: StateFlow<Map<SeatPos, Boolean>?> = _seats
     override val seatBeltBuckled: StateFlow<Map<SeatPos, Boolean>?> = _belts
     private val _odometer = MutableStateFlow<Double?>(12345.0)

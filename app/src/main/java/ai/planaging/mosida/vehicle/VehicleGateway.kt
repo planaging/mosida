@@ -19,6 +19,12 @@ interface VehicleGateway {
     val isMoving: StateFlow<Boolean>
 
     /**
+     * 기어 값을 실제로 받았는지. false면(값 없음·UNKNOWN·수신 전) 정차로 간주하지 않고
+     * 승하차 확인 창을 막는다. 운행 기록 저장은 그대로 한다.
+     */
+    val gearKnown: StateFlow<Boolean>
+
+    /**
      * 좌석별 착석 감지. 차량이 지원하지 않으면 null.
      * null인 좌석은 "모름"으로 보고 기록만으로 판단한다.
      */

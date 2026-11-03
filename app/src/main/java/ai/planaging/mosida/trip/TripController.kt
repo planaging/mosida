@@ -62,6 +62,8 @@ data class TripUiState(
     val elders: List<Elder> = emptyList(),
     val records: List<TripRecord> = emptyList(),
     val isMoving: Boolean = false,
+    /** 기어 값을 받았는지. false면 승하차 확인 창을 띄우지 않는다. */
+    val gearKnown: Boolean = true,
     val doorOpen: Boolean = false,
     val seatOccupied: Map<SeatPos, Boolean>? = null,
     val seatBelt: Map<SeatPos, Boolean>? = null,
@@ -176,6 +178,7 @@ data class TripUiState(
                 absent = absent.size,
                 warnings = records.count {
                     it.method == ConfirmMethod.DOOR_OPEN_MOVING ||
+                        it.method == ConfirmMethod.GEAR_UNKNOWN ||
                         it.method == ConfirmMethod.SEAT_CHECKED ||
                         it.method == ConfirmMethod.MANUAL_AFTER_WARNING
                 },
@@ -189,7 +192,7 @@ data class TripUiState(
 data class Boarding(val time: String, val method: ConfirmMethod)
 
 /** 등원 집 앞 탑승 확인 창 */
-data class BoardPrompt(val suggested: Elder, val choosingOther: Boolean = false)
+data class BoardPrompt(val suggested: Elder, val choosingOther: Boolean = false, val openedAt: String? = null)
 
 data class DropoffPrompt(
     val openedAt: String,
@@ -211,7 +214,7 @@ data class DropoffPrompt(
  * [탑승 호출] 좌석이 다 정해지면 하차의 역순(마지막에 내릴 분부터)으로 한 분씩 부른다. 배정된 자리 착석 센서가
  *          "빈 → 앉음"이 되거나 "탑승 확인"을 누르면 인사하고 다음 분을 부른다(센서 없는 자리는 버튼).
  *          뒷문이 열려 하차 확인 창이 뜨면 내리실 분을 불러드린다.
- * [보호자 연락 · 시연] 다음 집으로 출발(기어 D)할 때 내비 도착 예정 시간으로 알림, 하차 확인 뒤 "잘 들어가셨습니다" 알림,
+ * [보호자 연락 · 시연] 다음 집으로 출발(기어 D)할 때 내비 도착 예정 시간으로 알림, 하차 확인 뒤 "차량에서 내리셨습니다"(보호자 인계 시 "보호자께 인계했습니다") 알림,
  *          "보호자 전화" 버튼. 실제 발송·발신은 하지 않고 운행 기록에만 남긴다(알림톡·전화 연동은 다음 단계).
  */
 class TripController(
@@ -234,6 +237,7 @@ class TripController(
                 if (open && !wasOpen) onRearDoorOpened()
             }
         }
+        scope.launch { gateway.gearKnown.collect { k -> _state.update { it.copy(gearKnown = k) } } }
         scope.launch {
             gateway.isMoving.collect { m ->
                 val was = _state.value.isMoving
@@ -294,7 +298,7 @@ class TripController(
     /** 운행이 끝난 뒤 새 표를 받으면 처음부터 시작한다. 끝난 운행은 종료할 때 파일로 저장되어 있다. */
     fun startOver() = _state.update {
         TripUiState(
-            elders = it.elders, isMoving = it.isMoving, doorOpen = it.doorOpen,
+            elders = it.elders, isMoving = it.isMoving, gearKnown = it.gearKnown, doorOpen = it.doorOpen,
             seatOccupied = it.seatOccupied, seatBelt = it.seatBelt, beltBuckledOnce = it.beltBuckledOnce,
             guidance = it.guidance, nowMin = it.nowMin, odometerKm = it.odometerKm, serviceStarts = it.serviceStarts,
         )
@@ -444,6 +448,12 @@ class TripController(
     private fun onRearDoorOpened() {
         val s = _state.value
         if (s.phase != Phase.RUNNING || s.tripEnded) return
+        if (!s.gearKnown) {
+            // 기어 값을 모르면 정차로 간주하지 않는다. 확인 창은 막고, 기록은 남긴다.
+            addRecord(TripRecord(now(), "-", "차량 상태 확인 필요", "오른쪽 뒷문", ConfirmMethod.GEAR_UNKNOWN, "차량"))
+            post("차량 상태 확인 필요 · 기어 값을 받지 못해 승하차 확인을 막았습니다", "차량 기어 상태를 확인할 수 없습니다. 정차를 확인한 뒤 문을 다시 열어 주세요.")
+            return
+        }
         if (s.isMoving) {
             addRecord(TripRecord(now(), "-", "경고", "오른쪽 뒷문", ConfirmMethod.DOOR_OPEN_MOVING, "차량"))
             return
@@ -452,7 +462,7 @@ class TripController(
             if (s.boardPrompt != null || s.arrivalPrompt) return
             val n = s.next
             if (n != null) {
-                _state.update { it.copy(boardPrompt = BoardPrompt(n)) }
+                _state.update { it.copy(boardPrompt = BoardPrompt(n, openedAt = now())) }
                 post(null, pickupCall(n))
             } else if (s.onboard.isNotEmpty()) {
                 _state.update { it.copy(arrivalPrompt = true) }
@@ -473,7 +483,7 @@ class TripController(
     }
 
     fun pickBoardingElder(e: Elder) {
-        _state.update { st -> st.boardPrompt?.let { st.copy(boardPrompt = BoardPrompt(e)) } ?: st }
+        _state.update { st -> st.boardPrompt?.let { st.copy(boardPrompt = BoardPrompt(e, openedAt = it.openedAt)) } ?: st }
         post(null, pickupCall(e))
     }
 
@@ -497,7 +507,7 @@ class TripController(
                 pickupBase = st.pickupBase ?: planned?.let { clock to it },
                 nowMin = clock,
                 records = st.records +
-                    TripRecord(t, "${e.maskedName} 님", "탑승", e.seatLabel, ConfirmMethod.PICKUP_CONFIRMED, "동승자", e.id) +
+                    TripRecord(t, "${e.maskedName} 님", "탑승", e.seatLabel, ConfirmMethod.PICKUP_CONFIRMED, "동승자", e.id, doorOpenedAt = p.openedAt) +
                     TripRecord(t, "${e.maskedName} 님", "보호자 알림 · 잘 타셨습니다", "-", ConfirmMethod.GUARDIAN_NOTICE, "앱", e.id),
             )
         }
@@ -653,12 +663,14 @@ class TripController(
         val p = _state.value.dropoffPrompt ?: return
         if (!canConfirm(p)) return
         val method = if (p.suggested.needsGuardian) ConfirmMethod.DOOR_CONFIRMED_GUARDIAN else ConfirmMethod.DOOR_CONFIRMED
-        markDropped(p.suggested, method, by = "동승자")
+        markDropped(p.suggested, method, by = "동승자", doorOpenedAt = p.openedAt)
         val e = p.suggested
+        // 하차만 확인됐으면 "차량에서 내리셨습니다", 보호자 인계까지 확인됐으면 "보호자께 인계했습니다"
+        val notice = if (method == ConfirmMethod.DOOR_CONFIRMED_GUARDIAN) "보호자께 인계했습니다" else "차량에서 내리셨습니다"
         _state.update {
             it.copy(
                 dropoffPrompt = null,
-                records = it.records + TripRecord(now(), "${e.maskedName} 님", "보호자 알림 · 잘 들어가셨습니다", "-", ConfirmMethod.GUARDIAN_NOTICE, "앱", e.id),
+                records = it.records + TripRecord(now(), "${e.maskedName} 님", "보호자 알림 · $notice", "-", ConfirmMethod.GUARDIAN_NOTICE, "앱", e.id),
             )
         }
     }
@@ -730,14 +742,14 @@ class TripController(
 
     private fun addRecord(r: TripRecord) = _state.update { it.copy(records = it.records + r) }
 
-    private fun markDropped(elder: Elder, method: ConfirmMethod, by: String) {
+    private fun markDropped(elder: Elder, method: ConfirmMethod, by: String, doorOpenedAt: String? = null) {
         val t = now()
         _state.update { st ->
             st.copy(
                 elders = st.elders.map {
                     if (it.id == elder.id) it.copy(status = RideStatus.DROPPED, droppedAt = t) else it
                 },
-                records = st.records + TripRecord(t, "${elder.maskedName} 님", "하차", elder.seatLabel, method, by, elder.id),
+                records = st.records + TripRecord(t, "${elder.maskedName} 님", "하차", elder.seatLabel, method, by, elder.id, doorOpenedAt),
                 lastDroppedId = elder.id,
             )
         }
@@ -761,8 +773,9 @@ class TripController(
         val car = trip?.let { "${it.vehicleCode} ${it.vehicleName}" } ?: s.layout.name
         val driver = trip?.driver ?: ""
         val escort = trip?.escort ?: ""
-        val header = row("날짜", "운행", "차량", "운전", "동승", "시간", "어르신", "구분", "좌석", "확인 방식", "확인자")
-        val lines = s.records.map { row(day, kind, car, driver, escort, it.time, it.elderName, it.kind, it.seat, it.method.label, it.confirmedBy) }
+        // "시간"은 직원이 확인한 시각, "뒷문 열림"은 집 앞에서 문이 열린 시각. 둘을 따로 남겨 담당자가 대조한다.
+        val header = row("날짜", "운행", "차량", "운전", "동승", "시간", "뒷문 열림", "어르신", "구분", "좌석", "확인 방식", "확인자")
+        val lines = s.records.map { row(day, kind, car, driver, escort, it.time, it.doorOpenedAt ?: "", it.elderName, it.kind, it.seat, it.method.label, it.confirmedBy) }
         // 어르신별 차량 체류시간: 이번 운행에서 탄 시각부터 내린 시각까지
         val onBoard = setOf(ConfirmMethod.BOARDED_SENSOR, ConfirmMethod.BOARDED_TAP, ConfirmMethod.PICKUP_CONFIRMED)
         val offBoard = setOf(ConfirmMethod.DOOR_CONFIRMED, ConfirmMethod.DOOR_CONFIRMED_GUARDIAN, ConfirmMethod.MANUAL_AFTER_WARNING, ConfirmMethod.ARRIVED)

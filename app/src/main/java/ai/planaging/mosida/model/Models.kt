@@ -116,6 +116,7 @@ enum class ConfirmMethod(val label: String) {
     UNDO("잘못 누른 기록 취소"),
     SEAT_CHECKED("좌석 센서 감지 → 직접 확인 · 사람 없음"),
     DOOR_OPEN_MOVING("주행 중 뒷문 열림 경고"),
+    GEAR_UNKNOWN("기어 상태 확인 불가 · 승하차 확인 막음"),
     PICKUP_CONFIRMED("뒷문 열림 + 탑승 확인"),
     PICKUP_NO_SHOW("집 앞 확인 · 오늘 안 오심"),
     ARRIVED("센터 도착 + 모두 내림 확인"),
@@ -138,6 +139,8 @@ data class TripRecord(
     val method: ConfirmMethod,
     val confirmedBy: String,
     val elderId: String? = null,
+    /** 이 승하차 확인 직전에 집 앞에서 오른쪽 뒷문이 열린 시각. 확인 시각(time)과 따로 남긴다. */
+    val doorOpenedAt: String? = null,
 )
 
 /** 운행 종료를 막는 이유 */

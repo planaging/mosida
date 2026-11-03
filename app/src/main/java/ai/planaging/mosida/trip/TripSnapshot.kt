@@ -55,6 +55,7 @@ object TripSnapshot {
                 put("time", r.time); put("name", r.elderName); put("kind", r.kind); put("seat", r.seat)
                 put("method", r.method.name); put("by", r.confirmedBy)
                 r.elderId?.let { put("id", it) }
+                r.doorOpenedAt?.let { put("door", it) }
             }
         }))
         put("boarded", JSONArray(s.boardedAt.map { (id, b) ->
@@ -100,6 +101,7 @@ object TripSnapshot {
                     r.getString("time"), r.getString("name"), r.getString("kind"), r.getString("seat"),
                     ConfirmMethod.valueOf(r.getString("method")), r.getString("by"),
                     r.optString("id").takeIf { it.isNotEmpty() },
+                    r.optString("door").takeIf { it.isNotEmpty() },
                 )
             },
             boardedAt = o.getJSONArray("boarded").objects().associate {

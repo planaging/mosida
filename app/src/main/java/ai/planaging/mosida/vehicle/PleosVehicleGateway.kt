@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.update
  *
  * - 문: 오른쪽 뒷문(ROW_2_RIGHT) 위치 리스너. 값이 0보다 크면 열림.
  * - 주행 중: 기어가 P가 아니면 주행 중으로 본다. (속도 API가 없어 기어로 판단)
+ *   기어 값을 못 받거나 UNKNOWN이면 gearKnown=false → 정차로 간주하지 않고 승하차 확인을 막는다.
  * - 좌석: 착석·벨트 리스너. 차량이 그 좌석을 지원하지 않으면 맵에 넣지 않는다("모름").
  * - 길안내: [PleosNavi] (NaviHelper). 남은 정류장을 경로로 보내고 회전 안내를 받는다.
  *
@@ -46,6 +47,9 @@ class PleosVehicleGateway(context: Context) : VehicleGateway {
 
     override val rearRightDoorOpen: StateFlow<Boolean> = _door
     override val isMoving: StateFlow<Boolean> = _moving
+    /** 첫 기어 값을 받기 전에는 false. 값이 없거나 UNKNOWN이면 false. */
+    private val _gearKnown = MutableStateFlow(false)
+    override val gearKnown: StateFlow<Boolean> = _gearKnown
     override val seatOccupied: StateFlow<Map<SeatPos, Boolean>?> = _seats
     override val seatBeltBuckled: StateFlow<Map<SeatPos, Boolean>?> = _belts
     private val _odometer = MutableStateFlow<Double?>(null)
@@ -178,8 +182,10 @@ class PleosVehicleGateway(context: Context) : VehicleGateway {
 
     private fun setGear(g: VehicleGear?) {
         main.post {
-            val moving = g != null && g != VehicleGear.GEAR_PARK && g != VehicleGear.GEAR_UNKNOWN
-            Log.i(TAG, "gear=$g moving=$moving")
+            val known = g != null && g != VehicleGear.GEAR_UNKNOWN
+            val moving = known && g != VehicleGear.GEAR_PARK
+            Log.i(TAG, "gear=$g known=$known moving=$moving")
+            _gearKnown.value = known
             _moving.value = moving
         }
     }

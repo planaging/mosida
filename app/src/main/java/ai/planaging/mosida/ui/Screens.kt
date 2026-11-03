@@ -921,6 +921,7 @@ private fun LogRow(a: String, b: String, c: String, d: String, e: String, f: Str
 private fun DemoPanel(fake: FakeVehicleGateway, state: TripUiState) {
     val door by fake.rearRightDoorOpen.collectAsState()
     val moving by fake.isMoving.collectAsState()
+    val gearKnown by fake.gearKnown.collectAsState()
     // 벨트 시연: 탑승 중 두 번째 어르신 좌석 / 잔류 시연: 비어 있는 첫 승객 좌석
     val beltSeat = state.onboard.getOrNull(1)?.seat
     val ghostSeat = state.layout.passengerSeats.firstOrNull { state.elderAt(it) == null }
@@ -935,6 +936,7 @@ private fun DemoPanel(fake: FakeVehicleGateway, state: TripUiState) {
         Text("시연 패널", color = C.Muted, fontSize = 15.sp)
         DemoButton(if (door) "뒷문 닫기" else "뒷문 열기") { fake.setDoorOpen(!door) }
         DemoButton(if (moving) "정차" else "주행 시작") { fake.setMoving(!moving) }
+        DemoButton(if (gearKnown) "기어 값 끊기" else "기어 값 복구") { fake.setGearKnown(!gearKnown) }
         if (beltSeat != null) DemoButton(if (beltOff) "${beltSeat.label} 벨트 체결" else "${beltSeat.label} 벨트 풀기") { fake.setBeltBuckled(beltSeat, beltOff) }
         if (ghostSeat != null) DemoButton(if (ghost) "${ghostSeat.label} 착석 해제" else "${ghostSeat.label} 착석 감지") { fake.setSeatOccupied(ghostSeat, !ghost) }
     }
