@@ -33,7 +33,7 @@
    adb shell "am start -n ai.planaging.mosida/.MainActivity --es trip_b64 '$b64'"
    ```
 
-스타리아 1열에는 운전자와 동승 직원만 앉습니다(어르신 8명). 2차에 한 분만 남으면 자리 있는 다른 차로 옮깁니다.
+스타리아 운전석 줄에는 운전자와 동승 직원만 앉습니다(어르신 8명). 2차에 한 분만 남으면 자리 있는 다른 차로 옮깁니다.
 
 화면의 데이터는 시연용으로 지어낸 것입니다(`node tools/make-sample-data.js`). `node center-web/verify.js`로 표와 기록을 비교할 수 있습니다.
 
