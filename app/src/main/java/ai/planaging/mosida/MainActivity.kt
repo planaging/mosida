@@ -1,7 +1,7 @@
 package ai.planaging.mosida
 
 import ai.planaging.mosida.model.EndBlock
-import ai.planaging.mosida.trip.ArgosExport
+import ai.planaging.mosida.trip.CareRecordExport
 import ai.planaging.mosida.trip.CenterTripFile
 import ai.planaging.mosida.trip.FULL_DAY_MIN
 import ai.planaging.mosida.trip.Phase
@@ -204,7 +204,7 @@ class MainActivity : ComponentActivity() {
             controller.state.map { it.tripEnded }.distinctUntilChanged().collect {
                 if (it) {
                     exportCsv()
-                    saveArgos()
+                    saveCareRecord()
                 }
             }
         }
@@ -233,12 +233,12 @@ class MainActivity : ComponentActivity() {
         loadServiceStarts()
     }
 
-    private fun ledgerFile() = File(filesDir, "argos-ledger-${java.time.LocalDate.now()}.json")
+    private fun ledgerFile() = File(filesDir, "record-ledger-${java.time.LocalDate.now()}.json")
 
     /** 오늘 등원 탑승 시각을 하원 화면에 알려 준다(8시간 기준 안내). */
     private fun loadServiceStarts() {
         val f = ledgerFile()
-        controller.setServiceStarts(ArgosExport.serviceStarts(if (f.exists()) f.readText(Charsets.UTF_8) else null))
+        controller.setServiceStarts(CareRecordExport.serviceStarts(if (f.exists()) f.readText(Charsets.UTF_8) else null))
     }
 
     private fun say(text: String) {
@@ -246,16 +246,16 @@ class MainActivity : ComponentActivity() {
     }
 
     /** 그날의 등원·하원을 합친 기관 전산 형식 파일. 운행이 끝날 때마다 갱신한다. */
-    private fun saveArgos() {
+    private fun saveCareRecord() {
         val day = java.time.LocalDate.now().toString()
         val dir = getExternalFilesDir(null)
         val ledgerFile = ledgerFile()
-        val ledger = ArgosExport.merge(if (ledgerFile.exists()) ledgerFile.readText(Charsets.UTF_8) else null, controller.state.value)
+        val ledger = CareRecordExport.merge(if (ledgerFile.exists()) ledgerFile.readText(Charsets.UTF_8) else null, controller.state.value)
         ledgerFile.writeText(ledger, Charsets.UTF_8)
-        val csv = ArgosExport.toCsv(ledger, day)
+        val csv = CareRecordExport.toCsv(ledger, day)
         File(dir, "기관전산_$day.csv").writeText(csv, Charsets.UTF_8)
-        android.util.Log.i("MosidaArgos", "saved 기관전산_$day.csv\n$csv")
-        controller.setServiceStarts(ArgosExport.serviceStarts(ledger))
+        android.util.Log.i("MosidaRecord", "saved 기관전산_$day.csv\n$csv")
+        controller.setServiceStarts(CareRecordExport.serviceStarts(ledger))
     }
 
     private fun exportCsv() {

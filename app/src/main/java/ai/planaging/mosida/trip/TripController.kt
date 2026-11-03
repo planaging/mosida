@@ -108,7 +108,7 @@ data class TripUiState(
     fun fullDayAt(e: Elder): String? = if (!SHOW_FULL_DAY_HINT) null else serviceStarts[e.id]?.let { LocalTime.parse(it, HHMM).plusMinutes(FULL_DAY_MIN.toLong()).format(HHMM) }
 
     /** 지금 내리시면 그날 제공시간이 몇 분인지. 등원 기록이 없으면 null */
-    fun serviceSoFar(e: Elder): Int? = if (!SHOW_FULL_DAY_HINT) null else serviceStarts[e.id]?.let { ArgosExport.serviceMinutes(it, LocalTime.now().format(HHMM)) }
+    fun serviceSoFar(e: Elder): Int? = if (!SHOW_FULL_DAY_HINT) null else serviceStarts[e.id]?.let { CareRecordExport.serviceMinutes(it, LocalTime.now().format(HHMM)) }
 
     val isPickup: Boolean get() = selectedTrip?.isPickup == true
     /** 등원: 모두 "오늘 안 오심"이라 태울 분도 탄 분도 없음 */
@@ -767,7 +767,7 @@ class TripController(
         val onBoard = setOf(ConfirmMethod.BOARDED_SENSOR, ConfirmMethod.BOARDED_TAP, ConfirmMethod.PICKUP_CONFIRMED)
         val offBoard = setOf(ConfirmMethod.DOOR_CONFIRMED, ConfirmMethod.DOOR_CONFIRMED_GUARDIAN, ConfirmMethod.MANUAL_AFTER_WARNING, ConfirmMethod.ARRIVED)
         val stays = s.records.filter { it.elderId != null }.groupBy { it.elderId!! }.mapNotNull { (_, rs) ->
-            ArgosExport.serviceMinutes(rs.lastOrNull { it.method in onBoard }?.time, rs.lastOrNull { it.method in offBoard }?.time)
+            CareRecordExport.serviceMinutes(rs.lastOrNull { it.method in onBoard }?.time, rs.lastOrNull { it.method in offBoard }?.time)
         }
         val sm = s.summary
         val summary = listOf(
