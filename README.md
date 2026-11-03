@@ -56,7 +56,7 @@
 
 ## 테스트 환경
 
-- Pleos Connect Emulator v2.1.0 (Android Automotive, API 34), RAM 6GB 권장 (`-memory 6144`. 4GB면 내비가 경로 계산 중 강제 종료될 수 있습니다)
+- Pleos Connect Emulator v2.1.0 (Android Automotive, API 34), RAM 5GB 권장 (`-memory 5120`. 4GB면 내비가 경로 계산 중 강제 종료될 수 있고, PC 메모리가 빠듯하면 6GB는 PC가 느려집니다)
 - Android SDK API 34, minSdk 28, JDK 17~21
 - Pleos SDK: Vehicle 2.3.2 · TextToSpeech 3.3.1 · NaviHelper 3.0.5
 - Pleos 키 값은 필요 없습니다 (음성은 ON_DEVICE 모드, 차량·내비 신호는 에뮬레이터에서 바로 받음)

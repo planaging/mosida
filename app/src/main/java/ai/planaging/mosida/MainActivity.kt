@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
         }
         lifecycleScope.launch {
             state.map { if (it.running()) it.unbuckled.firstOrNull() else null }.distinctUntilChanged { a, b -> a?.id == b?.id }.collect { e ->
-                if (e != null) say("${e.seatLabel} 안전벨트가 풀렸습니다. 안전한 곳에 정차해 주세요.")
+                if (e != null) say("${e.seatLabel} 자리 안전벨트가 풀렸습니다. 안전한 곳에 정차해 주세요.")
             }
         }
         lifecycleScope.launch {
