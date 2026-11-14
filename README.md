@@ -12,7 +12,7 @@
 |---|---|---|
 | ![사무실 등하원표](docs/screens/1-center-dispatch.png) | ![차량 3칸 화면](docs/screens/2-car-3-panel.png) | ![운행 기록](docs/screens/3-trip-log.png) |
 
-시연 영상: (촬영 후 링크 추가 예정)
+시연 영상: [YouTube에서 보기](https://www.youtube.com/watch?v=55RcVVCv7K8)
 
 ## APK
 
